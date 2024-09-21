@@ -24,7 +24,7 @@ adapter.onTurnError = async (context, error) => {
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173'  // Allow only your frontend's origin
+  origin: '*'
 }));
 
 // Define bot endpoint for Direct Line/Web Chat
