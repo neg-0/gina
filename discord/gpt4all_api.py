@@ -1,11 +1,24 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from gpt4all import GPT4All
+import logging
+import os
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# Check model file existence
+model_path = r"C:\Users\Evan\Desktop\gina\discord\Meta-Llama-3-8B-Instruct.Q4_0.gguf"
+if not os.path.exists(model_path):
+    logging.error("Model file not found at the specified path.")
+    exit(1)
 
 # Initialize GPT4All model
-gpt = GPT4All(r"C:\Users\Evan\Desktop\gina\discord\Meta-Llama-3-8B-Instruct.Q4_0.gguf")  # Ensure the model path is correct
+gpt = GPT4All(model_path)
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -25,6 +38,9 @@ def generate():
         with gpt.chat_session() as session:
             response = session.generate(question)
         
+        if not response:
+            return jsonify({'error': 'No response generated.'}), 500
+        
         # Return the response as JSON
         return jsonify({'response': response})
 
@@ -33,6 +49,7 @@ def generate():
     except ValueError as ve:
         return jsonify({'error': str(ve)}), 400
     except Exception as e:
+        logging.error(f"Error: {str(e)}")  # Log the error
         return jsonify({'error': 'An unexpected error occurred: ' + str(e)}), 500
 
 if __name__ == '__main__':

@@ -1,3 +1,26 @@
+require('dotenv').config(); // Load environment variables
+const { Client, GatewayIntentBits } = require('discord.js');
+const axios = require('axios');
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+const TOKEN = process.env.DISCORD_TOKEN;
+const URL = 'http://127.0.0.1:5000/generate';
+console.log('Discord Token:', TOKEN);
+
+client.once('ready', () => {
+    if (!URL) {
+        console.error("FLASK_URL environment variable is not defined!");
+    } else {
+        console.log('Flask URL:', URL);
+    }
+    if (!TOKEN) {
+        console.error("DISCORD_TOKEN environment variable is not defined!");
+    } else {
+        console.log('Discord Token:', TOKEN);
+    }
+    console.log('Bot is online!');
+});
+
 client.on('messageCreate', async (message) => {
     // Prevent the bot from responding to itself
     if (message.author.bot) return;
@@ -5,8 +28,6 @@ client.on('messageCreate', async (message) => {
     // Check if the message starts with a specific command (e.g., "!ask")
     if (message.content.startsWith('!ask')) {
         const question = message.content.slice(5).trim(); // Get the question and trim whitespace
-        console.log('Received question:', question); // Debug log
-
         if (!question) {
             message.channel.send("Please provide a question after '!ask'.");
             return;
@@ -14,8 +35,6 @@ client.on('messageCreate', async (message) => {
         
         try {
             const response = await axios.post(URL, { question });
-            console.log('Flask response:', response.data); // Debug log
-            
             if (response.status === 200) {
                 const answer = response.data.response;
                 message.channel.send(answer); // Send the response back to the Discord channel
@@ -23,7 +42,6 @@ client.on('messageCreate', async (message) => {
                 message.channel.send("Failed to get a valid response from the GPT4All service.");
             }
         } catch (error) {
-            console.error('Error during Flask request:', error); // More detailed error logging
             if (error.response) {
                 // The request was made and the server responded with a status code
                 console.error('Error response:', error.response.data);
@@ -40,3 +58,5 @@ client.on('messageCreate', async (message) => {
         }
     }
 });
+
+client.login(TOKEN);
