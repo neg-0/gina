@@ -59,4 +59,4 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-client.login(TOKEN);
+client.login(TOKEN).catch(console.error); // Log any errors
