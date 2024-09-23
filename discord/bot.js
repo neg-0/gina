@@ -2,7 +2,15 @@ require('dotenv').config(); // Load environment variables
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require('axios');
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+const client = new Client({ 
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+    ] 
+});
+
 const TOKEN = process.env.DISCORD_TOKEN;
 const URL = 'http://127.0.0.1:5000/generate';
 
@@ -12,23 +20,39 @@ client.once('ready', () => {
     console.log('Discord Token:', TOKEN ? 'Loaded' : 'Not loaded');
 });
 
-
-
 client.on('messageCreate', async (message) => {
     // Prevent the bot from responding to itself
     if (message.author.bot) return;
 
     console.log(`Message received: "${message.content}" from ${message.author.username}`);
+
     if (message.content === '!ping') {
         message.channel.send('Pong!');
     }
+
     // Check if the message starts with a specific command (e.g., "!ask")
     if (message.content.startsWith('!ask')) {
-        const question = message.content.slice(5).trim(); // Get the question after '!ask' and trim whitespace
-        if (!question) {
-            message.channel.send("Please provide a question after '!ask'.");
-            console.log("No question provided.");
+        let question = message.content.slice(5).trim(); // Get the question after '!ask' and trim whitespace
+        let attachmentContext = '';
+
+        // Check if the message has attachments
+        if (message.attachments.size > 0) {
+            message.attachments.forEach(attachment => {
+                attachmentContext += `\nAttachment URL: ${attachment.url}`;
+                console.log(`Attachment found: ${attachment.url}`);
+            });
+        }
+
+        // If no question and no attachments, prompt the user
+        if (!question && message.attachments.size === 0) {
+            message.channel.send("Please provide a question or attach a file after '!ask'.");
+            console.log("No question or attachment provided.");
             return;
+        }
+
+        // Add attachment context to the question
+        if (attachmentContext) {
+            question += attachmentContext;
         }
 
         console.log(`Question sent to GPT4All: "${question}"`);

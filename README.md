@@ -82,6 +82,8 @@ npm install
 1. **Set up environment variables**:
    Create `.env` files in both the `frontend` and `backend` directories:
 
+   
+
    **Frontend `.env`**:
 
    ```bash

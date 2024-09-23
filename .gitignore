@@ -39,3 +39,7 @@ Thumbs.db
 # IDE or editor-specific settings
 .vscode/
 .idea/
+
+.env
+.venv
+Meta-Llama-3-8B-Instruct.Q4_0.gguf
