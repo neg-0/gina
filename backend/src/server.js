@@ -1,7 +1,5 @@
-const { CloudAdapter, ConfigurationBotFrameworkAuthentication } = require('botbuilder');
+const { CloudAdapter, ConfigurationBotFrameworkAuthentication, ActivityHandler } = require('botbuilder');
 const express = require('express');
-const { DirectLine } = require('botframework-directlinejs');
-const WebSocket = require('ws');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -17,8 +15,34 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity('Oops, something went wrong!');
 };
 
-// Create an instance of your bot
-// const bot = new YourBot(); // Replace with your bot's instance
+// Define the bot logic by extending ActivityHandler
+class EchoBot extends ActivityHandler {
+  constructor() {
+    super();
+    // OnMessage handler: Handles incoming text messages
+    this.onMessage(async (context, next) => {
+      const userMessage = context.activity.text;
+      // Send back an echo message to the user
+      await context.sendActivity(`You said: ${userMessage}. It worked!`);
+      // Call the next middleware in the pipeline
+      await next();
+    });
+
+    // OnMembersAdded handler: Greets new members when they join the conversation
+    this.onMembersAdded(async (context, next) => {
+      const membersAdded = context.activity.membersAdded;
+      for (let idx in membersAdded) {
+        if (membersAdded[idx].id !== context.activity.recipient.id) {
+          await context.sendActivity('Welcome to the bot!');
+        }
+      }
+      await next();
+    });
+  }
+}
+
+// Create an instance of the EchoBot
+const bot = new EchoBot();
 
 // Initialize Express
 const app = express();
@@ -30,20 +54,9 @@ app.use(cors({
 // Define bot endpoint for Direct Line/Web Chat
 app.post('/api/messages', async (req, res) => {
   await adapter.process(req, res, async (context) => {
-    // Process bot activity
-    await context.sendActivity(`You said ${context.activity.text}`)
+    // Delegate activity processing to the bot instance
+    await bot.run(context);
   });
-});
-
-app.post('/api/token', async (req, res) => {
-  const secret = 'YOUR_DIRECT_LINE_SECRET';
-  const directLine = new DirectLine({
-    secret,
-    WebSocket: WebSocket
-  });
-
-  // Respond with the generated token
-  res.json({ token: directLine.secret });
 });
 
 // Start the server
