@@ -2,6 +2,7 @@ const { CloudAdapter, ConfigurationBotFrameworkAuthentication, ActivityHandler }
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const { AzureOpenAIConnector } = require('./bots/azureOpenAiConnector');
 
 // Set up authentication for CloudAdapter
 const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(process.env);
@@ -15,34 +16,8 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity('Oops, something went wrong!');
 };
 
-// Define the bot logic by extending ActivityHandler
-class EchoBot extends ActivityHandler {
-  constructor() {
-    super();
-    // OnMessage handler: Handles incoming text messages
-    this.onMessage(async (context, next) => {
-      const userMessage = context.activity.text;
-      // Send back an echo message to the user
-      await context.sendActivity(`You said: ${userMessage}. It worked!`);
-      // Call the next middleware in the pipeline
-      await next();
-    });
-
-    // OnMembersAdded handler: Greets new members when they join the conversation
-    this.onMembersAdded(async (context, next) => {
-      const membersAdded = context.activity.membersAdded;
-      for (let idx in membersAdded) {
-        if (membersAdded[idx].id !== context.activity.recipient.id) {
-          await context.sendActivity('Welcome to the bot!');
-        }
-      }
-      await next();
-    });
-  }
-}
-
 // Create an instance of the EchoBot
-const bot = new EchoBot();
+const bot = new AzureOpenAIConnector();
 
 // Initialize Express
 const app = express();
