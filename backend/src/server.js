@@ -34,7 +34,9 @@ app.post('/api/messages', async (req, res) => {
   });
 });
 
+const port = process.env.PORT || 3978;
+
 // Start the server
-app.listen(3978, () => {
-  console.log('Server is running on port 3978');
+app.listen(port, () => {
+  console.log('Server is running on port ' + port);
 });
